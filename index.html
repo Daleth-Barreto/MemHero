@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Asignación de Memoria</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font: Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+    <!-- Theme Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-bg': '#0F172A',      /* Dark Slate */
+                        'neon-card': '#1E293B',    /* Lighter Slate */
+                        'neon-cyan': '#06B6D4',    /* Cyan-500 */
+                        'neon-pink': '#D946EF',    /* Fuchsia-500 */
+                        'neon-purple': '#8B5CF6',  /* Violet-500 */
+                        'neon-yellow': '#FACC15',  /* Yellow-400 */
+                        'neon-text': '#F8FAFC',    /* Slate-50 */
+                        'neon-dim': '#94A3B8',     /* Slate-400 */
+                    },
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px #06B6D4' },
+                            '50%': { boxShadow: '0 0 20px #06B6D4' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Memory Block Styles */
+        .memory-bar {
+            display: flex;
+            width: 100%;
+            height: 120px;
+            background-color: #334155;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .mem-block {
+            height: 100%;
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-right: 1px solid rgba(0,0,0,0.2);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .mem-block:hover {
+            filter: brightness(1.1);
+        }
+
+        .mem-block.free {
+            background-color: #1E293B; /* Dark Empty */
+            color: #64748B;
+            background-image: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                #334155 10px,
+                #334155 20px
+            );
+        }
+
+        .mem-block.process {
+            background: linear-gradient(135deg, #06B6D4, #2563EB);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .mem-block.new-alloc {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scaleY(0); opacity: 0; }
+            100% { transform: scaleY(1); opacity: 1; }
+        }
+
+        .tooltip {
+            pointer-events: none;
+        }
+        
+        /* Stats meter */
+        .frag-meter-bg {
+            background: #334155;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .frag-meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10B981, #FACC15, #EF4444);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+    </style>
+</head>
+<body class="bg-neon-bg text-neon-text font-sans antialiased">
+
+    <!-- Header -->
+    <header class="w-full p-8 text-center bg-gradient-to-b from-neon-card to-neon-bg border-b border-neon-cyan/30">
+        <div class="inline-block px-3 py-1 mb-4 border border-neon-purple text-neon-purple text-xs tracking-widest uppercase font-bold rounded-full">Simulador Didáctico</div>
+        <h1 class="text-3xl md:text-5xl font-black mb-4 tracking-tight text-white">
+            ASIGNACIÓN DE MEMORIA
+        </h1>
+        <p class="text-lg text-neon-dim max-w-3xl mx-auto">
+            El reto de la <span class="text-neon-cyan font-bold">Fragmentación</span>. ¿Puedes mantener la memoria eficiente?
+        </p>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <!-- CONTROLS SECTION -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+            
+            <!-- Controls -->
+            <div class="lg:col-span-4 bg-neon-card p-6 rounded-lg shadow-lg border-l-4 border-neon-cyan">
+                <h2 class="text-xl font-bold mb-4 text-neon-cyan">Panel de Control</h2>
+                
+                <!-- Algorithm Select -->
+                <div class="mb-6">
+                    <label class="block text-sm text-gray-400 mb-2 font-bold">Algoritmo de Ajuste:</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setAlgo('First')" id="btnFirst" class="algo-btn bg-neon-cyan text-black font-bold py-2 text-xs rounded hover:opacity-90 transition">First Fit</button>
+                        <button onclick="setAlgo('Best')" id="btnBest" class="algo-btn bg-gray-700 text-gray-300 font-bold py-2 text-xs rounded hover:bg-gray-600 transition">Best Fit</button>
+                        <button onclick="setAlgo('Worst')" id="btnWorst" class="algo-btn bg-gray-700 text-gray-300 font-bold py-2 text-xs rounded hover:bg-gray-600 transition">Worst Fit</button>
+                    </div>
+                    <p id="algoDesc" class="text-xs text-neon-dim mt-2 italic h-8">
+                        Toma el primer hueco donde quepa el proceso (Rápido).
+                    </p>
+                </div>
+
+                <!-- Create Process -->
+                <div class="mb-6 p-4 bg-neon-bg rounded border border-gray-700">
+                    <label class="block text-sm text-white mb-2 font-bold">Nuevo Proceso:</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="number" id="processSize" value="100" min="10" max="500" class="w-full bg-gray-800 text-white border border-gray-600 rounded p-2 focus:border-neon-cyan outline-none" placeholder="Tamaño (MB)">
+                        <button onclick="createProcess()" class="bg-neon-pink hover:bg-fuchsia-600 text-white font-bold px-4 rounded transition shadow-[0_0_10px_rgba(217,70,239,0.4)]">
+                            + Crear
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="createRandomProcess()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-xs py-1 rounded text-gray-300">Aleatorio (50-300MB)</button>
+                    </div>
+                </div>
+
+                <!-- Reset -->
+                <button onclick="resetMemory()" class="w-full border border-red-500 text-red-500 hover:bg-red-500/10 py-2 rounded transition text-sm font-bold uppercase tracking-wider">
+                    Formatear Memoria (Reset)
+                </button>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- Memory Bar Visual -->
+                <div class="bg-neon-card p-6 rounded-lg shadow-lg border-t-4 border-neon-purple relative">
+                    <div class="flex justify-between items-end mb-2">
+                        <h3 class="text-xl font-bold text-white">Mapa de Memoria RAM <span class="text-sm text-neon-dim">(Total: 1000 MB)</span></h3>
+                        <span id="statusMsg" class="text-sm text-neon-yellow font-bold animate-pulse"></span>
+                    </div>
+
+                    <!-- The BAR -->
+                    <div class="w-full bg-gray-900 p-1 rounded-lg border border-gray-600">
+                        <div id="memoryContainer" class="memory-bar">
+                            <!-- Blocks generated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Axis -->
+                    <div class="flex justify-between text-xs text-gray-500 mt-1 px-1 font-mono">
+                        <span>0 MB</span>
+                        <span>500 MB</span>
+                        <span>1000 MB</span>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="flex gap-6 justify-center mt-4 text-xs text-gray-400">
+                        <div class="flex items-center gap-2"><div class="w-4 h-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded"></div> Proceso Asignado</div>
+                        <div class="flex items-center gap-2"><div class="w-4 h-4 bg-[#1E293B] border border-gray-600 rounded pattern-diagonal"></div> Espacio Libre (Hueco)</div>
+                        <div class="flex items-center gap-2"><div class="w-4 h-4 bg-red-500/20 border border-red-500 rounded"></div> Fallo de Asignación</div>
+                    </div>
+                </div>
+
+                <!-- Statistics Panel -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-neon-bg p-4 rounded border border-gray-700 text-center">
+                        <div class="text-neon-dim text-xs uppercase">Espacio Libre Total</div>
+                        <div class="text-2xl font-bold text-white"><span id="totalFree">1000</span> MB</div>
+                    </div>
+                    <div class="bg-neon-bg p-4 rounded border border-gray-700 text-center">
+                        <div class="text-neon-dim text-xs uppercase">Hueco Más Grande</div>
+                        <div class="text-2xl font-bold text-neon-cyan"><span id="maxHole">1000</span> MB</div>
+                    </div>
+                    <div class="bg-neon-bg p-4 rounded border border-gray-700 text-center relative overflow-hidden">
+                        <div class="text-neon-dim text-xs uppercase">Procesos Activos</div>
+                        <div class="text-2xl font-bold text-neon-pink"><span id="processCount">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Didactic Note -->
+                <div class="bg-blue-900/20 border border-blue-500/30 p-4 rounded text-sm text-blue-200">
+                    <strong class="text-blue-400">💡 Tip Didáctico:</strong>
+                    Intenta añadir muchos procesos pequeños, luego borra algunos intermedios (haz clic en ellos). Observarás cómo se forman "huecos" (fragmentación). Luego intenta insertar un proceso grande. ¡Verás que aunque la suma de espacio libre (Total) sea suficiente, si no hay un hueco contiguo (Max Hole), fallará!
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LOGIC -->
+    <script>
+        // --- CONFIG ---
+        const MEMORY_SIZE = 1000;
+        let blocks = [
+            { type: 'free', size: 1000, id: null } // Initial state: One big hole
+        ];
+        let currentAlgo = 'First';
+        let processCounter = 1;
+
+        // --- DOM ELEMENTS ---
+        const container = document.getElementById('memoryContainer');
+        const statusMsg = document.getElementById('statusMsg');
+        const uiTotalFree = document.getElementById('totalFree');
+        const uiMaxHole = document.getElementById('maxHole');
+        const uiProcessCount = document.getElementById('processCount');
+        const algoBtns = {
+            'First': document.getElementById('btnFirst'),
+            'Best': document.getElementById('btnBest'),
+            'Worst': document.getElementById('btnWorst')
+        };
+        const algoDescs = {
+            'First': "Toma el primer hueco encontrado donde quepa el proceso. Es el más rápido.",
+            'Best': "Busca en toda la memoria el hueco más pequeño donde quepa. Deja huecos minúsculos.",
+            'Worst': "Busca el hueco más grande disponible. Deja huecos grandes que pueden ser útiles."
+        };
+
+        // --- CORE LOGIC ---
+
+        function render() {
+            container.innerHTML = '';
+            let totalFree = 0;
+            let maxHole = 0;
+            let pCount = 0;
+
+            blocks.forEach((block, index) => {
+                const el = document.createElement('div');
+                el.className = `mem-block ${block.type === 'free' ? 'free' : 'process'}`;
+                
+                // Width calculation based on percentage
+                const widthPct = (block.size / MEMORY_SIZE) * 100;
+                el.style.width = `${widthPct}%`;
+
+                // Content
+                if (block.type === 'process') {
+                    el.innerHTML = `<div>P${block.id}</div><div class="text-[10px] opacity-70">${block.size}MB</div>`;
+                    el.title = "Clic para terminar proceso";
+                    el.onclick = () => killProcess(index);
+                    pCount++;
+                } else {
+                    el.innerHTML = `<div class="text-[10px]">${block.size}</div>`;
+                    totalFree += block.size;
+                    if (block.size > maxHole) maxHole = block.size;
+                }
+
+                // Add animation class if it's new (simple logic: check if last op affected this)
+                // (Skipping complex diffing for simplicity, just re-rendering)
+
+                container.appendChild(el);
+            });
+
+            // Update Stats
+            uiTotalFree.innerText = totalFree;
+            uiMaxHole.innerText = maxHole;
+            uiProcessCount.innerText = pCount;
+        }
+
+        function createProcess() {
+            const sizeInput = document.getElementById('processSize');
+            const size = parseInt(sizeInput.value);
+
+            if (isNaN(size) || size <= 0) return showStatus("Tamaño inválido", "error");
+            if (size > MEMORY_SIZE) return showStatus("El proceso excede la memoria total", "error");
+
+            // ALGORITHM LOGIC
+            let targetIndex = -1;
+
+            if (currentAlgo === 'First') {
+                targetIndex = blocks.findIndex(b => b.type === 'free' && b.size >= size);
+            } 
+            else if (currentAlgo === 'Best') {
+                let minDiff = Infinity;
+                blocks.forEach((b, idx) => {
+                    if (b.type === 'free' && b.size >= size) {
+                        const diff = b.size - size;
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            targetIndex = idx;
+                        }
+                    }
+                });
+            } 
+            else if (currentAlgo === 'Worst') {
+                let maxSize = -1;
+                blocks.forEach((b, idx) => {
+                    if (b.type === 'free' && b.size >= size) {
+                        if (b.size > maxSize) {
+                            maxSize = b.size;
+                            targetIndex = idx;
+                        }
+                    }
+                });
+            }
+
+            // ALLOCATION RESULT
+            if (targetIndex !== -1) {
+                allocate(targetIndex, size);
+                showStatus(`P${processCounter-1} asignado (${size}MB) usando ${currentAlgo} Fit`, "success");
+            } else {
+                // Check if total free space exists but is fragmented
+                const totalFree = blocks.reduce((acc, b) => b.type === 'free' ? acc + b.size : acc, 0);
+                if (totalFree >= size) {
+                    showStatus(`¡FALLO DE ASIGNACIÓN! Hay ${totalFree}MB libres, pero fragmentados.`, "error");
+                } else {
+                    showStatus("Memoria Insuficiente.", "error");
+                }
+            }
+        }
+
+        function allocate(index, size) {
+            const block = blocks[index];
+            const remaining = block.size - size;
+
+            // Create new process block
+            const newProcess = { type: 'process', size: size, id: processCounter++ };
+
+            // Replace the free block
+            if (remaining === 0) {
+                // Exact fit
+                blocks[index] = newProcess;
+            } else {
+                // Split: Process + Remaining Free
+                blocks.splice(index, 1, newProcess, { type: 'free', size: remaining, id: null });
+            }
+            render();
+        }
+
+        function killProcess(index) {
+            const block = blocks[index];
+            if (block.type !== 'process') return;
+
+            // Convert to free
+            block.type = 'free';
+            block.id = null;
+            showStatus(`Proceso liberado. Memoria recuperada.`, "neutral");
+
+            // COALESCING (Merging adjacent free blocks)
+            coalesceMemory();
+            render();
+        }
+
+        function coalesceMemory() {
+            for (let i = 0; i < blocks.length - 1; i++) {
+                if (blocks[i].type === 'free' && blocks[i+1].type === 'free') {
+                    // Merge i and i+1
+                    blocks[i].size += blocks[i+1].size;
+                    blocks.splice(i+1, 1);
+                    i--; // Check this index again in case next one is also free
+                }
+            }
+        }
+
+        function createRandomProcess() {
+            const size = Math.floor(Math.random() * 250) + 50; // 50 to 300
+            document.getElementById('processSize').value = size;
+            createProcess();
+        }
+
+        function resetMemory() {
+            blocks = [{ type: 'free', size: MEMORY_SIZE, id: null }];
+            processCounter = 1;
+            render();
+            showStatus("Memoria Reiniciada.", "neutral");
+        }
+
+        // --- UI HELPERS ---
+        function setAlgo(algo) {
+            currentAlgo = algo;
+            // Update buttons
+            Object.values(algoBtns).forEach(btn => {
+                btn.classList.remove('bg-neon-cyan', 'text-black');
+                btn.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            const activeBtn = algoBtns[algo];
+            activeBtn.classList.remove('bg-gray-700', 'text-gray-300');
+            activeBtn.classList.add('bg-neon-cyan', 'text-black');
+            
+            // Update desc
+            document.getElementById('algoDesc').innerText = algoDescs[algo];
+        }
+
+        function showStatus(msg, type) {
+            statusMsg.innerText = msg;
+            statusMsg.className = "text-sm font-bold animate-pulse transition-colors duration-300";
+            if (type === 'error') statusMsg.classList.add('text-red-500');
+            else if (type === 'success') statusMsg.classList.add('text-neon-green');
+            else statusMsg.classList.add('text-neon-cyan');
+
+            setTimeout(() => {
+                statusMsg.innerText = "";
+            }, 3000);
+        }
+
+        // Init
+        render();
+
+    </script>
+</body>
+</html>
