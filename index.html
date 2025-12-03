@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MemHero EXPROM 2025</title>
+    <title>MemHero: EXPROM 2025</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,6 +23,7 @@
                         'neon-yellow': '#ffe600',
                         'neon-green': '#00ff66',
                         'neon-red': '#ff0033',
+                        'retro-purple': '#240046',
                     },
                     fontFamily: {
                         arcade: ['"Press Start 2P"', 'cursive'],
@@ -30,6 +31,18 @@
                     },
                     animation: {
                         'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'sun-glow': 'sunGlow 4s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        sunGlow: {
+                            'from': { boxShadow: '0 0 40px #ff00ff, 0 0 80px #ff00ff inset' },
+                            'to': { boxShadow: '0 0 60px #ff00ff, 0 0 100px #ff00ff inset' }
+                        }
                     }
                 }
             }
@@ -38,50 +51,94 @@
 
     <style>
         body {
-            background-color: #050011;
+            background-color: #020005;
             color: #fff;
             overflow: hidden;
             user-select: none;
         }
 
-        /* --- BACKGROUND FX --- */
-        .retro-grid {
+        /* --- BACKGROUND FX "EXPROM EDITION" --- */
+        .world-container {
             position: fixed;
-            width: 200%;
-            height: 200%;
-            top: -50%;
+            top: 0; left: 0; width: 100%; height: 100%;
+            perspective: 1000px;
+            overflow: hidden;
+            z-index: -1;
+            background: linear-gradient(to bottom, #120024 0%, #000000 100%);
+        }
+
+        /* Retro Sun */
+        .retro-sun {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #ffe600 0%, #ff00ff 50%, #7000ff 100%);
+            mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 60%, transparent 65%, black 65%, black 70%, transparent 70%, transparent 75%, black 75%, black 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 55%, black 60%, transparent 65%, black 70%, transparent 75%, black 80%, transparent 85%, black 90%);
+            box-shadow: 0 0 50px rgba(255, 0, 255, 0.6);
+            animation: sun-glow 4s infinite alternate;
+            z-index: 0;
+        }
+
+        /* Moving Grid Floor */
+        .cyber-grid {
+            position: absolute;
+            bottom: -50%;
             left: -50%;
+            width: 200%;
+            height: 100%;
             background-image: 
-                linear-gradient(rgba(180, 0, 255, 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(180, 0, 255, 0.3) 1px, transparent 1px);
-            background-size: 60px 60px;
-            transform: perspective(500px) rotateX(60deg) translateY(0);
-            animation: gridMove 4s linear infinite;
-            z-index: -1;
-            box-shadow: 0 0 100px rgba(180, 0, 255, 0.2);
+                linear-gradient(rgba(0, 243, 255, 0.4) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.4) 2px, transparent 2px);
+            background-size: 80px 80px;
+            transform: rotateX(70deg);
+            transform-origin: 50% 0;
+            animation: gridScroll 3s linear infinite;
+            box-shadow: 0 -50px 100px rgba(0, 243, 255, 0.2);
+            z-index: 1;
         }
 
-        @keyframes gridMove {
-            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-            100% { transform: perspective(500px) rotateX(60deg) translateY(60px); }
+        @keyframes gridScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 80px; }
         }
 
-        .horizon-glow {
-            position: fixed;
-            top: 40%;
-            left: 0; right: 0;
-            height: 200px;
-            background: linear-gradient(to top, rgba(0, 243, 255, 0.1), transparent);
-            pointer-events: none;
-            z-index: -1;
+        /* Stars / Particles */
+        .stars {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(white 1px, transparent 1px),
+                radial-gradient(white 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* Mountains Silhouette (CSS Only) */
+        .mountains {
+            position: absolute;
+            bottom: 30%; /* Align with horizon */
+            left: 0; width: 100%; height: 100px;
+            background: 
+                linear-gradient(135deg, transparent 50%, #050011 50%) 0 0 / 100px 100px,
+                linear-gradient(225deg, transparent 50%, #050011 50%) 0 0 / 120px 120px;
+            background-repeat: repeat-x;
+            opacity: 0.8;
+            z-index: 1;
         }
 
         /* --- UI ELEMENTS --- */
         .glass-panel {
-            background: rgba(10, 10, 20, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
         }
 
         .menu-btn {
@@ -94,7 +151,8 @@
             background: #fff !important;
             color: #000 !important;
             transform: scale(1.05);
-            box-shadow: 0 0 20px #fff;
+            box-shadow: 0 0 25px rgba(255,255,255,0.8);
+            z-index: 10;
         }
 
         .note {
@@ -111,191 +169,192 @@
             background: rgba(0,0,0,0.5);
         }
 
-        /* Hit Zone & Highway */
-        .highway-track {
-            transform: rotateX(40deg);
-            transform-origin: 50% 100%;
-            height: 120%;
-            background: linear-gradient(180deg, #020617 0%, #1e293b 100%);
-            border-left: 4px solid #334155;
-            border-right: 4px solid #334155;
-            position: relative;
-            top: -20%;
-        }
-
+        /* Hit Zone */
         .hit-zone-line {
             height: 4px;
-            background: rgba(255,255,255,0.3);
-            box-shadow: 0 0 5px white;
+            background: rgba(255,255,255,0.6);
+            box-shadow: 0 0 15px white, 0 0 30px #00f3ff;
             position: absolute;
             left: 0; right: 0;
-            bottom: 200px; /* Exact collision point */
+            bottom: 200px;
             transition: all 0.1s;
         }
         
         .hit-zone-line.active {
             background: #fff;
-            box-shadow: 0 0 20px #00f3ff;
             height: 6px;
+            box-shadow: 0 0 20px #ff00ff, 0 0 40px #ff00ff;
         }
     </style>
 </head>
 <body class="h-screen flex flex-col font-cyber">
 
-    <!-- Background -->
-    <div class="retro-grid"></div>
-    <div class="horizon-glow"></div>
+    <!-- BACKGROUND WORLD -->
+    <div class="world-container">
+        <div class="stars"></div>
+        <div class="retro-sun"></div>
+        <div class="mountains"></div>
+        <div class="cyber-grid"></div>
+        <!-- Horizon Line -->
+        <div style="position: absolute; bottom: 30%; left:0; width:100%; height:2px; background:#00f3ff; box-shadow:0 0 20px #00f3ff; z-index:2;"></div>
+    </div>
 
     <!-- AUDIO TOGGLE -->
-    <button id="btnAudio" onclick="toggleAudio()" class="absolute top-4 right-4 z-50 text-xs text-gray-500 hover:text-white font-arcade border border-gray-700 p-2 bg-black hover:border-white transition">
+    <button id="btnAudio" onclick="toggleAudio()" class="absolute top-4 right-4 z-50 text-xs text-gray-400 hover:text-white font-arcade border border-gray-700 bg-black/50 p-2 hover:border-white transition backdrop-blur-sm">
         [M] SONIDO: OFF
     </button>
 
     <!-- 1. MAIN MENU -->
     <div id="screenMenu" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-6">
-        <h1 class="text-6xl md:text-8xl font-arcade text-transparent bg-clip-text bg-gradient-to-b from-white to-neon-cyan mb-4 animate-float drop-shadow-[0_0_15px_rgba(0,243,255,0.5)] text-center">
-            MEM_HERO
-        </h1>
-        <p class="text-neon-pink font-arcade text-xs tracking-widest uppercase mb-12 animate-pulse">EXPROM 2025 Edition</p>
-        
-        <div class="flex flex-col gap-4 w-full max-w-md" id="menuList">
-            <div class="menu-item menu-btn bg-gray-900 border-l-4 border-neon-yellow p-6 text-center cursor-pointer" data-algo="FIFO">
-                <h3 class="text-2xl font-bold text-neon-yellow font-arcade">FIFO</h3>
-                <p class="text-gray-400 text-xs mt-2">Dificultad: FÁCIL</p>
+        <div class="relative z-10 animate-float">
+            <h1 class="text-6xl md:text-9xl font-arcade text-transparent bg-clip-text bg-gradient-to-b from-white via-neon-cyan to-neon-pink mb-2 drop-shadow-[0_0_25px_rgba(0,243,255,0.6)] text-center tracking-tighter">
+                MEM_HERO
+            </h1>
+            <div class="bg-black/80 text-neon-yellow font-arcade text-xs md:text-sm tracking-[0.5em] uppercase px-4 py-2 border border-neon-yellow inline-block absolute -bottom-6 left-1/2 transform -translate-x-1/2 shadow-[0_0_15px_rgba(255,230,0,0.5)] whitespace-nowrap">
+                EXPROM 2025 EDITION
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-6 w-full max-w-md mt-20" id="menuList">
+            <div class="menu-item menu-btn bg-black/80 border-l-4 border-neon-yellow p-6 text-center cursor-pointer hover:bg-white/10" data-algo="FIFO">
+                <h3 class="text-2xl font-bold text-neon-yellow font-arcade drop-shadow-md">FIFO</h3>
+                <p class="text-gray-400 text-xs mt-2 font-mono">Dificultad: FÁCIL</p>
             </div>
             
-            <div class="menu-item menu-btn bg-gray-900 border-l-4 border-neon-cyan p-6 text-center cursor-pointer" data-algo="LRU">
-                <h3 class="text-2xl font-bold text-neon-cyan font-arcade">LRU</h3>
-                <p class="text-gray-400 text-xs mt-2">Dificultad: MEDIA</p>
+            <div class="menu-item menu-btn bg-black/80 border-l-4 border-neon-cyan p-6 text-center cursor-pointer hover:bg-white/10" data-algo="LRU">
+                <h3 class="text-2xl font-bold text-neon-cyan font-arcade drop-shadow-md">LRU</h3>
+                <p class="text-gray-400 text-xs mt-2 font-mono">Dificultad: MEDIA</p>
             </div>
 
-            <div class="menu-item menu-btn bg-gray-900 border-l-4 border-neon-pink p-6 text-center cursor-pointer" data-algo="OPT">
-                <h3 class="text-2xl font-bold text-neon-pink font-arcade">OPT</h3>
-                <p class="text-gray-400 text-xs mt-2">Dificultad: DIFÍCIL</p>
+            <div class="menu-item menu-btn bg-black/80 border-l-4 border-neon-pink p-6 text-center cursor-pointer hover:bg-white/10" data-algo="OPT">
+                <h3 class="text-2xl font-bold text-neon-pink font-arcade drop-shadow-md">OPT</h3>
+                <p class="text-gray-400 text-xs mt-2 font-mono">Dificultad: DIFÍCIL</p>
             </div>
         </div>
         
-        <div class="mt-12 text-gray-500 text-[10px] font-arcade text-center opacity-70">
-            <span class="text-white">CONTROLES MENÚ:</span> FLECHAS ↑ ↓ & ENTER<br><br>
-            <span class="text-white">JUEGO:</span> 1, 2, 3 ó A, S, D
+        <div class="mt-16 text-gray-500 text-[10px] font-arcade text-center opacity-80 bg-black/50 p-4 rounded-lg border border-gray-800 backdrop-blur-sm">
+            <span class="text-neon-cyan">MENÚ:</span> FLECHAS & ENTER &nbsp;|&nbsp; <span class="text-neon-pink">JUEGO:</span> 1, 2, 3 / A, S, D
         </div>
     </div>
 
     <!-- 2. BRIEFING -->
-    <div id="screenBriefing" class="hidden absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6 backdrop-blur-md">
-        <div class="glass-panel max-w-2xl w-full p-8 rounded-xl relative border-t-4" id="briefCard">
-            <h2 id="briefTitle" class="text-5xl font-arcade mb-6 text-white drop-shadow-md">ALGORITMO</h2>
+    <div id="screenBriefing" class="hidden absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-6 backdrop-blur-md">
+        <div class="glass-panel max-w-2xl w-full p-10 rounded-xl relative border-t-4 shadow-[0_0_50px_rgba(0,0,0,0.8)]" id="briefCard">
+            <h2 id="briefTitle" class="text-6xl font-arcade mb-8 text-white drop-shadow-[0_0_10px_currentColor]">ALGORITMO</h2>
             
-            <div class="space-y-6 font-cyber text-lg">
-                <p id="briefDesc" class="text-gray-300 leading-relaxed border-l-2 border-white pl-4">...</p>
-                <div class="bg-white/5 p-4 rounded">
-                    <h4 class="text-neon-green text-sm uppercase font-bold mb-2">ESTRATEGIA GANADORA</h4>
-                    <p id="briefStrat" class="text-white">...</p>
+            <div class="space-y-8 font-cyber text-xl">
+                <p id="briefDesc" class="text-gray-200 leading-relaxed border-l-4 border-white pl-6">...</p>
+                <div class="bg-gradient-to-r from-white/10 to-transparent p-6 rounded border-l-4 border-neon-green">
+                    <h4 class="text-neon-green text-sm uppercase font-bold mb-2 tracking-widest font-arcade">ESTRATEGIA</h4>
+                    <p id="briefStrat" class="text-white font-bold">...</p>
                 </div>
-                <div class="text-xs text-neon-red font-mono mt-4">
-                    ⚠️ ADVERTENCIA: La velocidad aumentará con el tiempo. Un error destruye la página.
+                <div class="flex items-center gap-2 text-xs text-neon-red font-mono mt-4 bg-black/40 p-2 rounded">
+                    <span class="animate-pulse">⚠️</span>
+                    <span>ADVERTENCIA: Velocidad incremental. Un solo error destruye la página.</span>
                 </div>
             </div>
 
-            <div class="mt-8 pt-4 border-t border-gray-700 flex justify-between items-center">
+            <div class="mt-10 pt-6 border-t border-gray-700 flex justify-between items-center">
                 <div class="text-xs text-gray-500 font-arcade">PRESIONA [ENTER] PARA INICIAR</div>
-                <button onclick="startGame()" class="bg-white text-black font-arcade py-3 px-8 hover:bg-neon-cyan transition shadow-glow">GO!</button>
+                <button onclick="startGame()" class="bg-white text-black font-arcade py-4 px-10 hover:bg-neon-cyan hover:scale-105 transition shadow-[0_0_20px_white]">START</button>
             </div>
         </div>
     </div>
 
     <!-- 3. GAME HUD -->
     <div id="gameHUD" class="hidden absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-40 pointer-events-none">
-        <div class="glass-panel px-4 py-2 rounded-br-xl">
-            <div class="text-[10px] text-gray-400 uppercase font-arcade">Algoritmo</div>
-            <div id="hudAlgo" class="text-xl font-bold text-white">--</div>
+        <div class="glass-panel px-6 py-3 rounded-br-2xl border-l-4 border-neon-cyan">
+            <div class="text-[10px] text-gray-400 uppercase font-arcade mb-1">Algoritmo</div>
+            <div id="hudAlgo" class="text-2xl font-bold font-cyber text-white drop-shadow-md">--</div>
         </div>
 
-        <div class="flex flex-col items-center">
-             <div id="feedbackText" class="h-8 text-3xl font-arcade text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-transform scale-0"></div>
-             <div class="text-4xl font-arcade text-neon-yellow mt-2 drop-shadow-md" id="hudScore">0000</div>
-             <div class="text-[10px] text-neon-red font-arcade animate-pulse mt-1" id="speedIndicator">SPEED: 100%</div>
+        <div class="flex flex-col items-center pt-4">
+             <div id="feedbackText" class="h-12 text-5xl font-arcade text-white drop-shadow-[0_0_20px_white] transition-transform scale-0 italic"></div>
+             <div class="text-5xl font-arcade text-neon-yellow mt-4 drop-shadow-[0_0_10px_rgba(255,230,0,0.8)]" id="hudScore">0000</div>
+             <div class="text-[10px] text-neon-red font-arcade animate-pulse mt-2 bg-black/50 px-2 rounded" id="speedIndicator">SPEED: 100%</div>
         </div>
 
-        <div class="glass-panel px-4 py-2 rounded-bl-xl text-right">
-             <div class="text-[10px] text-gray-400 uppercase font-arcade">Combo</div>
-             <div id="hudCombo" class="text-xl font-bold text-neon-green">x1</div>
+        <div class="glass-panel px-6 py-3 rounded-bl-2xl text-right border-r-4 border-neon-green">
+             <div class="text-[10px] text-gray-400 uppercase font-arcade mb-1">Combo</div>
+             <div id="hudCombo" class="text-2xl font-bold text-neon-green drop-shadow-md">x1</div>
         </div>
     </div>
 
     <!-- 4. GAME AREA -->
-    <div id="screenGame" class="hidden flex-1 relative flex flex-col h-full">
+    <div id="screenGame" class="hidden flex-1 relative flex flex-col h-full z-10">
         
         <!-- HIGHWAY -->
-        <div class="highway-container flex-1 bg-void relative">
-            <div class="highway-track mx-auto w-full max-w-3xl">
-                <!-- Grid Lines Animation -->
-                <div class="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(59,130,246,.1)_25%,rgba(59,130,246,.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,.1)_75%,rgba(59,130,246,.1)_76%,transparent_77%,transparent)] bg-[length:50px_50px] animate-[scrollGrid_1s_linear_infinite]"></div>
-                
-                <!-- HIT ZONE VISUAL (Corrected Position) -->
-                <div id="visualHitLine" class="hit-zone-line"></div>
-                <div class="absolute bottom-[205px] left-2 text-[10px] text-gray-500 font-arcade opacity-50">TARGET LINE</div>
+        <div class="relative flex-1 w-full max-w-4xl mx-auto border-l-2 border-r-2 border-white/10 bg-gradient-to-b from-transparent to-black/90 overflow-hidden backdrop-blur-[2px]">
+            
+            <!-- Target Line -->
+            <div id="visualHitLine" class="hit-zone-line"></div>
+            <div class="absolute bottom-[205px] left-4 text-[10px] text-neon-cyan font-arcade opacity-70 tracking-widest">TARGET ZONE</div>
 
-                <!-- NOTES LAYER -->
-                <div id="layerNotes" class="absolute inset-0 pointer-events-none"></div>
-            </div>
+            <!-- Notes Layer -->
+            <div id="layerNotes" class="absolute inset-0 pointer-events-none"></div>
 
             <!-- Queue Preview -->
-            <div class="absolute top-20 right-4 w-32 hidden md:block opacity-50">
-                <div class="text-[10px] text-neon-cyan mb-2 font-arcade text-right">NEXT:</div>
-                <div id="queueList" class="flex flex-col gap-2 items-end"></div>
+            <div class="absolute top-24 right-6 w-32 hidden md:block opacity-80">
+                <div class="text-[10px] text-neon-cyan mb-2 font-arcade text-right bg-black/50 px-2 rounded inline-block float-right">NEXT UP</div>
+                <div class="clear-both"></div>
+                <div id="queueList" class="flex flex-col gap-2 items-end mt-2"></div>
             </div>
         </div>
 
         <!-- CONTROLS -->
-        <div class="h-40 bg-black/90 border-t border-white/20 z-40 flex justify-center items-center gap-4 p-4 pb-8">
+        <div class="h-44 bg-black/90 border-t border-white/20 z-40 flex justify-center items-center gap-6 p-4 pb-10 shadow-[0_-10px_50px_rgba(0,0,0,1)]">
             
             <!-- FRAME 0 -->
-            <div id="btn-0" class="relative w-32 h-32 bg-gray-900 border-2 border-gray-700 rounded-lg flex flex-col items-center justify-center group transition-transform duration-75">
-                <div class="absolute top-2 right-2 flex gap-1"><span class="key-hint">1</span><span class="key-hint">A</span></div>
-                <div class="text-[10px] text-gray-500 font-arcade mb-1">MARCO 0</div>
-                <div id="val-0" class="text-4xl font-arcade text-white z-10">--</div>
-                <div id="bar-0" class="absolute bottom-0 left-0 right-0 h-1 bg-neon-red transition-all duration-300"></div>
+            <div id="btn-0" class="relative w-36 h-36 bg-gray-900 border-2 border-gray-700 rounded-xl flex flex-col items-center justify-center group transition-transform duration-75 shadow-lg">
+                <div class="absolute top-2 right-2 flex gap-1"><span class="key-hint text-[10px]">1</span><span class="key-hint text-[10px]">A</span></div>
+                <div class="text-[10px] text-gray-500 font-arcade mb-2">MARCO 0</div>
+                <div id="val-0" class="text-5xl font-arcade text-white z-10 drop-shadow-md">--</div>
+                <div id="bar-0" class="absolute bottom-0 left-0 right-0 h-1 bg-neon-red transition-all duration-300 rounded-b-xl"></div>
+                <!-- Active Glow -->
+                <div class="absolute inset-0 rounded-xl bg-neon-yellow/0 group-[.active-press]:bg-neon-yellow/20 transition duration-75"></div>
             </div>
 
             <!-- FRAME 1 -->
-            <div id="btn-1" class="relative w-32 h-32 bg-gray-900 border-2 border-gray-700 rounded-lg flex flex-col items-center justify-center group transition-transform duration-75">
-                <div class="absolute top-2 right-2 flex gap-1"><span class="key-hint">2</span><span class="key-hint">S</span></div>
-                <div class="text-[10px] text-gray-500 font-arcade mb-1">MARCO 1</div>
-                <div id="val-1" class="text-4xl font-arcade text-white z-10">--</div>
-                <div id="bar-1" class="absolute bottom-0 left-0 right-0 h-1 bg-neon-red transition-all duration-300"></div>
+            <div id="btn-1" class="relative w-36 h-36 bg-gray-900 border-2 border-gray-700 rounded-xl flex flex-col items-center justify-center group transition-transform duration-75 shadow-lg">
+                <div class="absolute top-2 right-2 flex gap-1"><span class="key-hint text-[10px]">2</span><span class="key-hint text-[10px]">S</span></div>
+                <div class="text-[10px] text-gray-500 font-arcade mb-2">MARCO 1</div>
+                <div id="val-1" class="text-5xl font-arcade text-white z-10 drop-shadow-md">--</div>
+                <div id="bar-1" class="absolute bottom-0 left-0 right-0 h-1 bg-neon-red transition-all duration-300 rounded-b-xl"></div>
+                <div class="absolute inset-0 rounded-xl bg-neon-cyan/0 group-[.active-press]:bg-neon-cyan/20 transition duration-75"></div>
             </div>
 
             <!-- FRAME 2 -->
-            <div id="btn-2" class="relative w-32 h-32 bg-gray-900 border-2 border-gray-700 rounded-lg flex flex-col items-center justify-center group transition-transform duration-75">
-                <div class="absolute top-2 right-2 flex gap-1"><span class="key-hint">3</span><span class="key-hint">D</span></div>
-                <div class="text-[10px] text-gray-500 font-arcade mb-1">MARCO 2</div>
-                <div id="val-2" class="text-4xl font-arcade text-white z-10">--</div>
-                <div id="bar-2" class="absolute bottom-0 left-0 right-0 h-1 bg-neon-red transition-all duration-300"></div>
+            <div id="btn-2" class="relative w-36 h-36 bg-gray-900 border-2 border-gray-700 rounded-xl flex flex-col items-center justify-center group transition-transform duration-75 shadow-lg">
+                <div class="absolute top-2 right-2 flex gap-1"><span class="key-hint text-[10px]">3</span><span class="key-hint text-[10px]">D</span></div>
+                <div class="text-[10px] text-gray-500 font-arcade mb-2">MARCO 2</div>
+                <div id="val-2" class="text-5xl font-arcade text-white z-10 drop-shadow-md">--</div>
+                <div id="bar-2" class="absolute bottom-0 left-0 right-0 h-1 bg-neon-red transition-all duration-300 rounded-b-xl"></div>
+                <div class="absolute inset-0 rounded-xl bg-neon-pink/0 group-[.active-press]:bg-neon-pink/20 transition duration-75"></div>
             </div>
 
         </div>
     </div>
 
-    <!-- 5. GAME OVER (UPDATED) -->
-    <div id="screenOver" class="hidden absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
-        <h2 class="text-5xl text-neon-red font-arcade mb-6 animate-pulse text-center leading-tight">SYSTEM<br>FAILURE</h2>
-        <div class="glass-panel p-10 rounded-xl text-center border border-neon-red w-full max-w-md">
-            <p class="text-gray-400 font-arcade text-[10px] uppercase mb-2">Puntuación Final</p>
-            <p id="finalScore" class="text-6xl text-white font-arcade mb-8 drop-shadow-glow">0</p>
+    <!-- 5. GAME OVER -->
+    <div id="screenOver" class="hidden absolute inset-0 z-50 bg-black/95 flex flex-col items-center justify-center backdrop-blur-sm">
+        <h2 class="text-6xl md:text-8xl text-neon-red font-arcade mb-8 animate-pulse text-center leading-tight drop-shadow-[0_0_30px_red]">SYSTEM<br>FAILURE</h2>
+        
+        <div class="glass-panel p-12 rounded-2xl text-center border-2 border-neon-red w-full max-w-lg shadow-[0_0_100px_rgba(255,0,0,0.2)]">
+            <p class="text-gray-400 font-arcade text-xs uppercase mb-4 tracking-widest">Puntuación Final</p>
+            <p id="finalScore" class="text-7xl text-white font-arcade mb-10 drop-shadow-glow">0</p>
             
-            <div class="flex flex-col gap-4">
-                <button onclick="restartGame()" class="bg-white text-black py-4 font-bold uppercase hover:bg-neon-green hover:text-white transition font-arcade text-xs shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+            <div class="flex flex-col gap-6">
+                <button onclick="restartGame()" class="bg-white text-black py-4 font-bold uppercase hover:bg-neon-green hover:scale-105 transition font-arcade text-sm shadow-[0_0_20px_rgba(255,255,255,0.5)]">
                     ↻ REINTENTAR
                 </button>
-                <button onclick="goToMenu()" class="bg-transparent border-2 border-gray-600 text-gray-300 py-4 font-bold uppercase hover:border-white hover:text-white transition font-arcade text-xs">
-                    ← VOLVER AL MENÚ
+                <button onclick="goToMenu()" class="bg-transparent border-2 border-gray-600 text-gray-300 py-4 font-bold uppercase hover:border-white hover:text-white hover:scale-105 transition font-arcade text-sm">
+                    ← MENÚ PRINCIPAL
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- --- JAVASCRIPT ENGINE --- -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         // --- AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -307,13 +366,11 @@
             if (soundEnabled) {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 btn.innerText = "[M] SONIDO: ON";
-                btn.classList.add('text-neon-green', 'border-neon-green');
-                btn.classList.remove('border-gray-700');
+                btn.className = "absolute top-4 right-4 z-50 text-xs text-neon-green font-arcade border border-neon-green bg-black/50 p-2 hover:bg-neon-green/10 transition backdrop-blur-sm shadow-[0_0_10px_#00ff66]";
                 playSound('select');
             } else {
                 btn.innerText = "[M] SONIDO: OFF";
-                btn.classList.remove('text-neon-green', 'border-neon-green');
-                btn.classList.add('border-gray-700');
+                btn.className = "absolute top-4 right-4 z-50 text-xs text-gray-500 hover:text-white font-arcade border border-gray-700 bg-black/50 p-2 hover:border-white transition backdrop-blur-sm";
             }
         }
 
@@ -343,15 +400,14 @@
             osc.stop(audioCtx.currentTime + s.dur);
         }
 
-        // --- GAME ENGINE ---
-        // IMPORTANT: The target line is set at bottom: 200px in CSS.
-        // We need to calculate its position relative to the highway top.
-        const BASE_SPEED = 150; 
-        const MAX_SPEED = 600;
-        const HIT_TOLERANCE = 50; // pixels up/down
+        // --- GAME CONSTANTS ---
+        const BASE_SPEED = 180; 
+        const MAX_SPEED = 700;
+        const HIT_TOLERANCE = 55;
 
+        // --- STATE ---
         let state = {
-            screen: 'MENU', 
+            screen: 'MENU',
             algo: 'FIFO',
             selectedMenuIdx: 0,
             active: false,
@@ -367,7 +423,7 @@
             currentSpeed: BASE_SPEED
         };
 
-        // --- MENU LOGIC ---
+        // --- MENU SYSTEM ---
         const menuItems = document.querySelectorAll('.menu-item');
         
         function updateMenuSelection() {
@@ -393,10 +449,11 @@
             }
         }
 
-        // --- BRIEFING LOGIC ---
+        // --- BRIEFING ---
         function prepareBriefing(algo) {
             state.screen = 'BRIEF';
             state.algo = algo;
+            
             document.getElementById('screenMenu').classList.add('hidden');
             document.getElementById('screenBriefing').classList.remove('hidden');
             
@@ -408,24 +465,24 @@
             title.innerText = algo;
             
             if (algo === 'FIFO') {
-                title.className = "text-5xl font-arcade mb-6 text-neon-yellow drop-shadow-md";
+                title.className = "text-6xl font-arcade mb-6 text-neon-yellow drop-shadow-[0_0_15px_#ffe600]";
                 card.style.borderColor = '#ffe600';
-                desc.innerText = "First-In, First-Out. La víctima es la MÁS VIEJA (la que llegó primero).";
-                strat.innerText = "Reemplaza la barra roja MÁS LLENA.";
+                desc.innerText = "First-In, First-Out. Las páginas entran en orden. La víctima es la MÁS VIEJA (la que llegó primero).";
+                strat.innerText = "REEMPLAZA LA BARRA ROJA MÁS LLENA.";
             } else if (algo === 'LRU') {
-                title.className = "text-5xl font-arcade mb-6 text-neon-cyan drop-shadow-md";
+                title.className = "text-6xl font-arcade mb-6 text-neon-cyan drop-shadow-[0_0_15px_#00f3ff]";
                 card.style.borderColor = '#00f3ff';
-                desc.innerText = "Least Recently Used. La víctima es la que hace MÁS TIEMPO que no se usa.";
-                strat.innerText = "HIT = Refresco. Reemplaza la barra roja MÁS LLENA.";
+                desc.innerText = "Least Recently Used. Basado en uso real. La víctima es la que hace MÁS TIEMPO que no se usa.";
+                strat.innerText = "HIT = REFRESCO. REEMPLAZA LA BARRA ROJA MÁS LLENA.";
             } else {
-                title.className = "text-5xl font-arcade mb-6 text-neon-pink drop-shadow-md";
+                title.className = "text-6xl font-arcade mb-6 text-neon-pink drop-shadow-[0_0_15px_#ff00ff]";
                 card.style.borderColor = '#ff00ff';
-                desc.innerText = "Optimal. Mira al futuro. La víctima es la que tardará MÁS TIEMPO en volver.";
-                strat.innerText = "Mira la lista 'NEXT'. Elimina la que NO esté o esté AL FINAL.";
+                desc.innerText = "Optimal. Mira al futuro. La víctima es la que tardará MÁS TIEMPO en volver a necesitarse.";
+                strat.innerText = "MIRA LA LISTA 'NEXT UP'. ELIMINA LA QUE NO ESTÉ O ESTÉ AL FONDO.";
             }
         }
 
-        // --- NAVIGATION FUNCTIONS ---
+        // --- GAME CONTROLS ---
         function startGame() {
             playSound('select');
             state.screen = 'GAME';
@@ -436,7 +493,7 @@
             
             document.getElementById('hudAlgo').innerText = state.algo;
             let color = state.algo === 'FIFO' ? 'text-neon-yellow' : (state.algo === 'LRU' ? 'text-neon-cyan' : 'text-neon-pink');
-            document.getElementById('hudAlgo').className = `text-xl font-bold font-tech ${color}`;
+            document.getElementById('hudAlgo').className = `text-2xl font-bold font-cyber ${color} drop-shadow-md`;
 
             resetState();
             generateQueue();
@@ -476,13 +533,12 @@
             state.notes = [];
             state.spawnTimer = 0;
             state.currentSpeed = BASE_SPEED;
-            
             document.getElementById('layerNotes').innerHTML = '';
             updateHUD();
             updateFrames();
         }
 
-        // --- INPUT GLOBAL LISTENER ---
+        // --- GLOBAL INPUT ---
         window.addEventListener('keydown', (e) => {
             if (e.key.toLowerCase() === 'm') toggleAudio();
 
@@ -504,16 +560,16 @@
                 if (map.hasOwnProperty(key)) {
                     handleGameInput(map[key]);
                     const btn = document.getElementById(`btn-${map[key]}`);
-                    btn.classList.add('border-white', 'scale-95'); 
-                    setTimeout(() => btn.classList.remove('border-white', 'scale-95'), 100);
+                    btn.classList.add('active-press', 'border-white'); 
+                    setTimeout(() => btn.classList.remove('active-press', 'border-white'), 100);
                 }
             }
         });
 
-        // --- GAME LOOP ---
+        // --- CORE LOOP ---
         function generateQueue() {
             state.queue = [];
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<150; i++) {
                 if (i>3 && Math.random() < 0.5) state.queue.push(state.queue[i-1] || 0);
                 else state.queue.push(Math.floor(Math.random() * 8));
             }
@@ -529,58 +585,45 @@
         }
 
         function updateGame(dt) {
-            // PROGRESSIVE SPEED: Increase speed by 5 pixels/sec every second
-            if (state.currentSpeed < MAX_SPEED) {
-                state.currentSpeed += (dt * 5); 
-            }
-            // Update Speed Indicator
-            const speedPct = Math.round((state.currentSpeed / BASE_SPEED) * 100);
-            document.getElementById('speedIndicator').innerText = `SPEED: ${speedPct}%`;
+            // Speed up
+            if (state.currentSpeed < MAX_SPEED) state.currentSpeed += (dt * 8); 
+            document.getElementById('speedIndicator').innerText = `SPEED: ${Math.round((state.currentSpeed/BASE_SPEED)*100)}%`;
 
             // Spawn
             state.spawnTimer -= dt;
             if (state.spawnTimer <= 0 && state.queue.length > 0) {
                 spawnNote();
-                // Spawn rate gets faster as speed increases
-                const rate = Math.max(0.5, 2.0 - ((state.currentSpeed - BASE_SPEED) / 500)); 
+                // Spawn rate gets faster
+                const rate = Math.max(0.6, 2.2 - ((state.currentSpeed - BASE_SPEED) / 400)); 
                 state.spawnTimer = rate; 
             }
 
-            // Move Notes
-            // We use the Highway container height to know where to draw.
-            // But logic uses pixel distance from top (0) to bottom.
-            const highway = document.getElementById('screenGame'); // roughly entire screen
-            const containerH = highway.clientHeight - 160; // Highway height excluding controls
+            // Move
+            const highway = document.getElementById('screenGame');
+            const containerH = highway.clientHeight - 160; 
+            const targetY = containerH - 40; 
             
-            // Visual Target: Bottom: 200px (CSS).
-            // In Top coords: containerH - 40 approx? No, let's use calculated:
-            const targetY = containerH - 40; // This visually aligns with the CSS bottom:200px line
-
-            // Check Collision for visual glow
             let activeInZone = false;
 
             state.notes.forEach(note => {
                 note.y += state.currentSpeed * dt;
                 note.el.style.top = `${note.y}px`;
 
-                // Calculate distance to target line
-                const dist = Math.abs((note.y + 30) - targetY); // +30 is note center
+                const dist = Math.abs((note.y + 30) - targetY);
                 if (dist < HIT_TOLERANCE && !note.missed) activeInZone = true;
 
-                // Miss Logic (Passes too far)
-                if (!note.missed && note.y > targetY + HIT_TOLERANCE + 20) {
+                if (!note.missed && note.y > targetY + HIT_TOLERANCE + 30) {
                     note.missed = true;
                     handleMiss(note);
                 }
             });
 
-            // Pulse the line
+            // Target Line FX
             const line = document.getElementById('visualHitLine');
             if (activeInZone) line.classList.add('active');
             else line.classList.remove('active');
 
-            // Cleanup
-            state.notes = state.notes.filter(n => n.y < containerH + 200);
+            state.notes = state.notes.filter(n => n.y < containerH + 300);
 
             if (state.queue.length === 0 && state.notes.length === 0) endGame();
         }
@@ -593,37 +636,30 @@
             let color = state.algo === 'FIFO' ? 'bg-neon-yellow border-neon-yellow text-black' : 
                         (state.algo === 'LRU' ? 'bg-neon-cyan border-neon-cyan text-black' : 'bg-neon-pink border-neon-pink text-black');
             
-            el.className = `note absolute border-2 font-bold flex items-center justify-center text-xl ${color}`;
-            el.style.width = '60px';
-            el.style.height = '60px';
+            el.className = `note absolute border-4 font-bold flex items-center justify-center text-3xl ${color} shadow-[0_0_20px_currentColor]`;
+            el.style.width = '70px';
+            el.style.height = '70px';
             el.innerText = val;
-            el.style.top = '-60px'; 
+            el.style.top = '-80px'; 
             document.getElementById('layerNotes').appendChild(el);
 
             state.notes.push({
                 id: state.idCounter++,
                 val: val,
-                y: -60,
+                y: -80,
                 el: el,
                 missed: false
             });
         }
 
         function handleGameInput(frameIdx) {
-            // Define Hit Line Position (Logic)
-            // Highway is flex-1. Controls are h-40 (160px).
-            // Line is bottom: 200px (CSS).
-            // So distance from top of notes layer to line is: (ContainerH - 160) - (200 - 160) ? No.
-            // CSS bottom: 200px relates to the highway container.
-            // Notes use absolute top within highway.
-            // Highway height = X. Line is at Y = X - 200.
-            const highway = document.querySelector('.highway-track');
-            const highwayRect = highway.getBoundingClientRect();
-            // The hit line element
+            const containerH = document.getElementById('screenGame').clientHeight;
+            // Target is calculated from bottom: 200px CSS relative to highway container.
+            // Highway is flex-1 above 176px controls.
+            // Let's refine target logic based on visual line.
             const line = document.getElementById('visualHitLine');
             const lineRect = line.getBoundingClientRect();
-            
-            // Calculate Note positions relative to viewport to match line rect
+
             let activeNote = null;
             let minDist = Infinity;
 
@@ -632,7 +668,6 @@
                 const noteRect = n.el.getBoundingClientRect();
                 const noteCenter = noteRect.top + (noteRect.height / 2);
                 const lineCenter = lineRect.top + (lineRect.height / 2);
-                
                 const dist = Math.abs(noteCenter - lineCenter);
 
                 if (dist < HIT_TOLERANCE && dist < minDist) {
@@ -643,13 +678,12 @@
 
             if (!activeNote) return; // Whiff
 
-            // LOGIC CHECK
             const page = activeNote.val;
             const memVal = state.memory[frameIdx];
             let success = false;
             let type = '';
 
-            // A. PAGE IN MEMORY?
+            // A. PAGE IN MEMORY (HIT)
             if (state.memory.includes(page)) {
                 if (memVal === page) {
                     success = true;
@@ -657,7 +691,7 @@
                     if (state.algo === 'LRU') state.meta[frameIdx] = Date.now();
                 }
             } 
-            // B. NOT IN MEMORY -> LOAD OR REPLACE
+            // B. NOT IN MEMORY (LOAD/REPLACE)
             else {
                 if (state.memory.includes(null)) {
                     if (memVal === null) {
@@ -681,10 +715,10 @@
                 if (type === 'LOAD') playSound('load');
                 if (type === 'REPLACE') playSound('replace');
 
-                showFeedback("GOOD!", "text-neon-green");
+                showFeedback("EXCELLENT!", "text-neon-green");
                 activeNote.missed = true;
                 
-                // Explode animation
+                // Explode
                 activeNote.el.style.transform = "scale(1.5)";
                 activeNote.el.style.opacity = "0";
                 setTimeout(() => activeNote.el.remove(), 200);
@@ -692,13 +726,12 @@
                 state.score += (100 * state.combo);
                 state.combo = Math.min(8, state.combo + 1);
             } else {
-                // FAILURE = DESTROY NOTE (Sudden Death for that note)
+                // SUDDEN DEATH
                 playSound('error');
-                showFeedback("MISS", "text-neon-red");
+                showFeedback("ERROR!", "text-neon-red");
                 state.combo = 1;
                 state.score = Math.max(0, state.score - 50);
                 
-                // NEW: Fail immediately destroys note
                 activeNote.missed = true;
                 activeNote.el.classList.add('bg-neon-red', 'border-neon-red');
                 activeNote.el.style.transform = "scale(0.8) rotate(20deg)";
@@ -731,15 +764,15 @@
 
         function handleMiss(note) {
             playSound('error');
-            showFeedback("LOST", "text-gray-500");
+            showFeedback("MISS", "text-gray-500");
             state.combo = 1;
             state.score = Math.max(0, state.score - 50);
             updateHUD();
             note.el.style.opacity = 0.5;
-            note.el.style.backgroundColor = '#333';
+            note.el.style.filter = "grayscale(100%)";
         }
 
-        // --- UI UPDATES ---
+        // --- UI ---
         function updateHUD() {
             document.getElementById('hudScore').innerText = state.score.toString().padStart(6, '0');
             document.getElementById('hudCombo').innerText = `x${state.combo}`;
@@ -749,7 +782,6 @@
             state.memory.forEach((val, i) => {
                 const elVal = document.getElementById(`val-${i}`);
                 const elBar = document.getElementById(`bar-${i}`);
-                
                 elVal.innerText = val !== null ? val : "--";
                 
                 let h = 0;
@@ -758,6 +790,7 @@
                     h = Math.min(100, age / 5000 * 100);
                 }
                 elBar.style.height = `${h}%`;
+                // Color Danger
                 elBar.style.backgroundColor = h > 80 ? '#ff0033' : '#334155';
             });
         }
@@ -770,7 +803,7 @@
         function showFeedback(txt, colorClass) {
             const el = document.getElementById('feedbackText');
             el.innerText = txt;
-            el.className = `h-8 text-3xl font-arcade drop-shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all scale-125 ${colorClass}`;
+            el.className = `h-12 text-5xl font-arcade drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] transition-all scale-125 italic ${colorClass}`;
             setTimeout(() => {
                 el.classList.remove('scale-125');
                 el.classList.add('scale-0');
@@ -784,7 +817,6 @@
             document.getElementById('finalScore').innerText = state.score;
         }
 
-        // Init Menu Selection
         updateMenuSelection();
     </script>
 </body>
